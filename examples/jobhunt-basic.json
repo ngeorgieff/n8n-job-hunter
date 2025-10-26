@@ -1,0 +1,95 @@
+{
+  "name": "Job Hunt Basic Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{ $json.jobUrl }}",
+        "options": {}
+      },
+      "name": "Apify - Scrape Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "job",
+        "operation": "search",
+        "additionalFields": {
+          "what": "software engineer",
+          "where": "remote"
+        }
+      },
+      "name": "Adzuna - Search Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{ $env.GOOGLE_SHEET_ID }}",
+        "range": "Jobs!A:Z"
+      },
+      "name": "Google Sheets - Store Results",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 2,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "jobTitle",
+              "field2": "company"
+            }
+          ]
+        }
+      },
+      "name": "Deduplicate Jobs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [450, 400]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4",
+        "prompt": "=Analyze this job posting and determine if it matches the candidate profile:\\n\\nJob: {{ $json.jobTitle }} at {{ $json.company }}\\nDescription: {{ $json.description }}"
+      },
+      "name": "OpenRouter - Analyze Match",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "to": "={{ $json.email }}",
+        "subject": "Job Application Materials",
+        "text": "=Please find attached your tailored resume and cover letter for {{ $json.jobTitle }} at {{ $json.company }}"
+      },
+      "name": "Gmail - Send Results",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    }
+  ],
+  "connections": {
+    "Apify - Scrape Jobs": {
+      "main": [[{"node": "Deduplicate Jobs", "type": "main", "index": 0}]]
+    },
+    "Adzuna - Search Jobs": {
+      "main": [[{"node": "Deduplicate Jobs", "type": "main", "index": 1}]]
+    },
+    "Deduplicate Jobs": {
+      "main": [[{"node": "Google Sheets - Store Results", "type": "main", "index": 0}]]
+    },
+    "Google Sheets - Store Results": {
+      "main": [[{"node": "OpenRouter - Analyze Match", "type": "main", "index": 0}]]
+    },
+    "OpenRouter - Analyze Match": {
+      "main": [[{"node": "Gmail - Send Results", "type": "main", "index": 0}]]
+    }
+  }
+}

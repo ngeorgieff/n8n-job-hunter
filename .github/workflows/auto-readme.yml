@@ -1,0 +1,68 @@
+name: Auto-Generate README
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'config/**'
+      - 'examples/**'
+      - '.github/workflows/auto-readme.yml'
+  workflow_dispatch:
+
+jobs:
+  generate-readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Generate README
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          chmod +x ./scripts/generate-readme.sh
+          ./scripts/generate-readme.sh
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet README.md; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes (main branch)
+        if: steps.check_changes.outputs.changed == 'true' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          git commit -m "docs: auto-generate README.md [skip ci]"
+          git push
+
+      - name: Create Pull Request (feature branches)
+        if: steps.check_changes.outputs.changed == 'true' && github.ref != 'refs/heads/main'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "docs: auto-generate README.md"
+          title: "📝 Update auto-generated README.md"
+          body: |
+            This PR contains an automatically generated README.md based on recent code changes.
+            
+            Please review and merge if the changes are accurate.
+          branch: auto-readme-${{ github.sha }}
+          delete-branch: true
