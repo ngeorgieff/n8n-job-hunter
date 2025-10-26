@@ -1,0 +1,799 @@
+{
+  "name": "Job Hunter - Multi-Platform Search",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "0e3d8d1b-9c9f-4b8f-9a4d-1b3d8d1b9c9f",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~linkedin-jobs-scraper/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{$credentials.apifyApi.apiKey}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "searchKeyword",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"keyword\"]}}"
+            },
+            {
+              "name": "location",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"location\"]}}"
+            },
+            {
+              "name": "maxItems",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"maxResults\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+      "name": "Apify LinkedIn Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        660,
+        140
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Apify API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~indeed-scraper/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{$credentials.apifyApi.apiKey}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "queries",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"keyword\"]}}"
+            },
+            {
+              "name": "location",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"location\"]}}"
+            },
+            {
+              "name": "maxItems",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"maxResults\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+      "name": "Apify Indeed Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        660,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Apify API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~glassdoor-scraper/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{$credentials.apifyApi.apiKey}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "searches",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"keyword\"]}}"
+            },
+            {
+              "name": "location",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"location\"]}}"
+            },
+            {
+              "name": "maxItems",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"maxResults\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3c4d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+      "name": "Apify Glassdoor Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        660,
+        460
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Apify API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~upwork-jobs-scraper/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{$credentials.apifyApi.apiKey}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "searchTerm",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"keyword\"]}}"
+            },
+            {
+              "name": "maxItems",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"maxResults\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d5e6f7g-8h9i-0j1k-2l3m-4n5o6p7q8r9s",
+      "name": "Apify Upwork Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        660,
+        620
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Apify API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.adzuna.com/v1/api/jobs/{{$node[\"Set Job Parameters\"].json[\"country\"]}}/search/1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "={{$credentials.adzunaApi.appId}}"
+            },
+            {
+              "name": "app_key",
+              "value": "={{$credentials.adzunaApi.appKey}}"
+            },
+            {
+              "name": "what",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"keyword\"]}}"
+            },
+            {
+              "name": "where",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"location\"]}}"
+            },
+            {
+              "name": "results_per_page",
+              "value": "={{$node[\"Set Job Parameters\"].json[\"maxResults\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5e6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t",
+      "name": "Adzuna API Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        660,
+        780
+      ],
+      "credentials": {
+        "adzunaApi": {
+          "id": "2",
+          "name": "Adzuna API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "keyword",
+              "value": "software engineer"
+            },
+            {
+              "name": "location",
+              "value": "San Francisco, CA"
+            },
+            {
+              "name": "country",
+              "value": "us"
+            },
+            {
+              "name": "maxResults",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u",
+      "name": "Set Job Parameters",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Wait for all Apify jobs to complete and fetch results\nconst items = [];\nconst runIds = [];\n\n// Collect all run IDs from the webhook responses\nfor (const item of $input.all()) {\n  if (item.json.data && item.json.data.id) {\n    runIds.push({\n      id: item.json.data.id,\n      source: item.json.source || 'Unknown'\n    });\n  }\n}\n\n// Wait for runs to complete and fetch results\nfor (const run of runIds) {\n  let status = 'RUNNING';\n  let attempts = 0;\n  const maxAttempts = 30;\n  \n  while (status === 'RUNNING' && attempts < maxAttempts) {\n    const statusResponse = await $http.request({\n      method: 'GET',\n      url: `https://api.apify.com/v2/acts/runs/${run.id}`,\n      headers: {\n        'Authorization': `Bearer ${$credentials.apifyApi.apiKey}`\n      }\n    });\n    \n    status = statusResponse.data.status;\n    \n    if (status === 'RUNNING') {\n      await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds\n      attempts++;\n    }\n  }\n  \n  if (status === 'SUCCEEDED') {\n    // Fetch the dataset results\n    const datasetResponse = await $http.request({\n      method: 'GET',\n      url: `https://api.apify.com/v2/acts/runs/${run.id}/dataset/items`,\n      headers: {\n        'Authorization': `Bearer ${$credentials.apifyApi.apiKey}`\n      }\n    });\n    \n    // Add source to each item\n    if (datasetResponse.data && Array.isArray(datasetResponse.data)) {\n      datasetResponse.data.forEach(job => {\n        items.push({\n          ...job,\n          source: run.source\n        });\n      });\n    }\n  }\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "7g8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v",
+      "name": "Wait for Apify Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Adzuna API response\nconst items = [];\n\nfor (const item of $input.all()) {\n  if (item.json.results && Array.isArray(item.json.results)) {\n    item.json.results.forEach(job => {\n      items.push({\n        json: {\n          title: job.title,\n          company: job.company.display_name,\n          location: job.location.display_name,\n          description: job.description,\n          url: job.redirect_url,\n          salary_min: job.salary_min,\n          salary_max: job.salary_max,\n          created: job.created,\n          source: 'Adzuna'\n        }\n      });\n    });\n  }\n}\n\nreturn items;"
+      },
+      "id": "8h9i0j1k-2l3m-4n5o-6p7q-8r9s0t1u2v3w",
+      "name": "Process Adzuna Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "9i0j1k2l-3m4n-5o6p-7q8r-9s0t1u2v3w4x",
+      "name": "Merge All Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize job data from all sources\nconst normalizedJobs = [];\n\nfor (const item of $input.all()) {\n  const job = item.json;\n  \n  // Create a normalized job object\n  const normalizedJob = {\n    title: job.title || job.jobTitle || job.position || '',\n    company: job.company || job.companyName || job.employer || '',\n    location: job.location || job.jobLocation || '',\n    description: job.description || job.jobDescription || job.summary || '',\n    url: job.url || job.link || job.jobUrl || '',\n    salary: job.salary || job.salary_min ? `${job.salary_min}-${job.salary_max}` : '',\n    posted_date: job.created || job.postedAt || job.datePosted || new Date().toISOString(),\n    source: job.source || 'Unknown',\n    // Create a unique ID for deduplication\n    uniqueId: `${job.title}-${job.company}-${job.location}`.toLowerCase().replace(/\\s+/g, '-')\n  };\n  \n  normalizedJobs.push({ json: normalizedJob });\n}\n\nreturn normalizedJobs;"
+      },
+      "id": "0j1k2l3m-4n5o-6p7q-8r9s-0t1u2v3w4x5y",
+      "name": "Normalize Job Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Deduplicate jobs based on uniqueId\nconst seenIds = new Set();\nconst uniqueJobs = [];\n\nfor (const item of $input.all()) {\n  const job = item.json;\n  const id = job.uniqueId;\n  \n  if (!seenIds.has(id)) {\n    seenIds.add(id);\n    uniqueJobs.push(item);\n  }\n}\n\nconsole.log(`Deduplicated ${$input.all().length - uniqueJobs.length} duplicate jobs`);\nconsole.log(`Unique jobs found: ${uniqueJobs.length}`);\n\nreturn uniqueJobs;"
+      },
+      "id": "1k2l3m4n-5o6p-7q8r-9s0t-1u2v3w4x5y6z",
+      "name": "Deduplicate Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$env.GOOGLE_SHEET_ID}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Jobs",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{$json.title}}",
+            "Company": "={{$json.company}}",
+            "Location": "={{$json.location}}",
+            "Description": "={{$json.description}}",
+            "URL": "={{$json.url}}",
+            "Salary": "={{$json.salary}}",
+            "Posted Date": "={{$json.posted_date}}",
+            "Source": "={{$json.source}}",
+            "Status": "New",
+            "Applied": "No",
+            "Date Found": "={{new Date().toISOString()}}"
+          }
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED",
+          "useAppend": false
+        }
+      },
+      "id": "2l3m4n5o-6p7q-8r9s-0t1u-2v3w4x5y6z7a",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.1,
+      "position": [
+        1780,
+        500
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "user_resume",
+              "name": "user_resume",
+              "value": "={{$env.USER_RESUME_TEXT}}",
+              "type": "string"
+            },
+            {
+              "id": "user_cover_letter_template",
+              "name": "user_cover_letter_template",
+              "value": "={{$env.USER_COVER_LETTER_TEMPLATE}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3m4n5o6p-7q8r-9s0t-1u2v-3w4x5y6z7a8b",
+      "name": "Load User Documents",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        2000,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.openRouterApi.apiKey}}"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://n8n-job-hunter.local"
+            },
+            {
+              "name": "X-Title",
+              "value": "n8n Job Hunter"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-4-turbo\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a professional resume and cover letter writer. Given a job description and a user's resume, tailor the resume to highlight relevant experience and skills for the job. Also create a customized cover letter.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Job Title: {{$json.title}}\\nCompany: {{$json.company}}\\nLocation: {{$json.location}}\\nJob Description: {{$json.description}}\\n\\nMy Resume:\\n{{$node['Load User Documents'].json.user_resume}}\\n\\nCover Letter Template:\\n{{$node['Load User Documents'].json.user_cover_letter_template}}\\n\\nPlease provide:\\n1. A tailored resume highlighting relevant skills and experience for this specific job\\n2. A customized cover letter for this position\\n\\nFormat the response as JSON with keys 'tailored_resume' and 'cover_letter'.\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 2000\n}",
+        "options": {}
+      },
+      "id": "4n5o6p7q-8r9s-0t1u-2v3w-4x5y6z7a8b9c",
+      "name": "OpenRouter AI - Tailor Documents",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2220,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4",
+          "name": "OpenRouter API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract AI response and add to job data\nconst items = [];\n\nfor (const item of $input.all()) {\n  const job = item.json;\n  \n  try {\n    // Parse the AI response\n    const aiResponse = JSON.parse(job.choices[0].message.content);\n    \n    items.push({\n      json: {\n        ...job,\n        tailored_resume: aiResponse.tailored_resume,\n        cover_letter: aiResponse.cover_letter,\n        ai_processed: true\n      }\n    });\n  } catch (error) {\n    // If parsing fails, keep the original job data\n    items.push({\n      json: {\n        ...job,\n        ai_processed: false,\n        ai_error: error.message\n      }\n    });\n  }\n}\n\nreturn items;"
+      },
+      "id": "5o6p7q8r-9s0t-1u2v-3w4x-5y6z7a8b9c0d",
+      "name": "Process AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$env.GOOGLE_SHEET_ID}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Jobs",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Tailored Resume": "={{$json.tailored_resume}}",
+            "Cover Letter": "={{$json.cover_letter}}",
+            "AI Processed": "={{$json.ai_processed ? 'Yes' : 'No'}}"
+          }
+        },
+        "options": {}
+      },
+      "id": "6p7q8r9s-0t1u-2v3w-4x5y-6z7a8b9c0d1e",
+      "name": "Update Sheet with AI Content",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.1,
+      "position": [
+        2660,
+        500
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare email summary\nconst jobs = $input.all();\nconst totalJobs = jobs.length;\n\nlet emailBody = `<h2>Job Hunter Daily Report</h2>`;\nemailBody += `<p>Found <strong>${totalJobs}</strong> new jobs matching your criteria.</p>`;\nemailBody += `<hr>`;\n\n// Group by source\nconst jobsBySource = {};\njobs.forEach(item => {\n  const source = item.json.source || 'Unknown';\n  if (!jobsBySource[source]) {\n    jobsBySource[source] = [];\n  }\n  jobsBySource[source].push(item.json);\n});\n\nemailBody += `<h3>Jobs by Source:</h3>`;\nemailBody += `<ul>`;\nObject.keys(jobsBySource).forEach(source => {\n  emailBody += `<li>${source}: ${jobsBySource[source].length} jobs</li>`;\n});\nemailBody += `</ul>`;\nemailBody += `<hr>`;\n\n// List top 10 jobs\nemailBody += `<h3>Top Matches:</h3>`;\njobs.slice(0, 10).forEach((item, index) => {\n  const job = item.json;\n  emailBody += `<div style=\"margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;\">`;\n  emailBody += `<h4>${index + 1}. ${job.title}</h4>`;\n  emailBody += `<p><strong>Company:</strong> ${job.company}</p>`;\n  emailBody += `<p><strong>Location:</strong> ${job.location}</p>`;\n  emailBody += `<p><strong>Salary:</strong> ${job.salary || 'Not specified'}</p>`;\n  emailBody += `<p><strong>Source:</strong> ${job.source}</p>`;\n  emailBody += `<p><a href=\"${job.url}\" style=\"color: #0066cc;\">View Job Posting</a></p>`;\n  if (job.ai_processed) {\n    emailBody += `<p style=\"color: green;\">✓ Resume and cover letter tailored</p>`;\n  }\n  emailBody += `</div>`;\n});\n\nemailBody += `<hr>`;\nemailBody += `<p><a href=\"https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}\">View Full Job List in Google Sheets</a></p>`;\n\nreturn [{\n  json: {\n    subject: `Job Hunter Report - ${totalJobs} New Jobs Found`,\n    body: emailBody,\n    totalJobs: totalJobs\n  }\n}];"
+      },
+      "id": "7q8r9s0t-1u2v-3w4x-5y6z-7a8b9c0d1e2f",
+      "name": "Prepare Email Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$env.RECIPIENT_EMAIL}}",
+        "subject": "={{$json.subject}}",
+        "emailType": "html",
+        "message": "={{$json.body}}",
+        "options": {}
+      },
+      "id": "8r9s0t1u-2v3w-4x5y-6z7a-8b9c0d1e2f3g",
+      "name": "Send Gmail Summary",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3100,
+        500
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5",
+          "name": "Gmail OAuth2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Job Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Job Parameters": {
+      "main": [
+        [
+          {
+            "node": "Apify LinkedIn Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Apify Indeed Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Apify Glassdoor Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Apify Upwork Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Adzuna API Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify LinkedIn Jobs": {
+      "main": [
+        [
+          {
+            "node": "Wait for Apify Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Indeed Jobs": {
+      "main": [
+        [
+          {
+            "node": "Wait for Apify Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Glassdoor Jobs": {
+      "main": [
+        [
+          {
+            "node": "Wait for Apify Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Upwork Jobs": {
+      "main": [
+        [
+          {
+            "node": "Wait for Apify Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adzuna API Jobs": {
+      "main": [
+        [
+          {
+            "node": "Process Adzuna Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Apify Results": {
+      "main": [
+        [
+          {
+            "node": "Merge All Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Adzuna Results": {
+      "main": [
+        [
+          {
+            "node": "Merge All Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Results": {
+      "main": [
+        [
+          {
+            "node": "Normalize Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Job Data": {
+      "main": [
+        [
+          {
+            "node": "Deduplicate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplicate Jobs": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Load User Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load User Documents": {
+      "main": [
+        [
+          {
+            "node": "OpenRouter AI - Tailor Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter AI - Tailor Documents": {
+      "main": [
+        [
+          {
+            "node": "Process AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process AI Response": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet with AI Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet with AI Content": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-10-26T15:47:50.143Z",
+  "versionId": "1"
+}
