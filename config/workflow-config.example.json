@@ -1,0 +1,43 @@
+{
+  "workflow": {
+    "name": "Job Hunt Automation",
+    "schedule": "0 9 * * *",
+    "timezone": "America/New_York"
+  },
+  "search": {
+    "keywords": [
+      "software engineer",
+      "full stack developer",
+      "backend developer"
+    ],
+    "locations": [
+      "remote",
+      "New York",
+      "San Francisco"
+    ],
+    "salaryMin": 100000,
+    "experienceLevel": "mid-senior"
+  },
+  "apify": {
+    "actors": [
+      "apify/linkedin-jobs-scraper",
+      "apify/indeed-scraper"
+    ],
+    "maxResults": 100
+  },
+  "adzuna": {
+    "resultsPerPage": 50,
+    "sortBy": "date"
+  },
+  "ai": {
+    "model": "openai/gpt-4",
+    "temperature": 0.7,
+    "matchThreshold": 0.75
+  },
+  "email": {
+    "recipient": "your-email@example.com",
+    "sendSummary": true,
+    "attachResume": true,
+    "attachCoverLetter": true
+  }
+}
