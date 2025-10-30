@@ -34,7 +34,7 @@ clean:
 test:
 	@echo "Running workflow validation tests..."
 	@if [ -d "tests" ]; then \
-		node tests/test_runner.js || npm test; \
+		npm test; \
 	else \
 		echo "No tests found in tests/ directory"; \
 	fi
