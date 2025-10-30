@@ -11,12 +11,25 @@ fi
 
 echo "Analyzing project structure and code..."
 
+# Build project structure listing, noting missing directories
+PROJECT_STRUCTURE=""
+for dir in src config examples; do
+  if [ -d "$dir" ]; then
+    PROJECT_STRUCTURE="$PROJECT_STRUCTURE
+$dir/
+$(find "$dir" -type f | sed 's/^/  /')"
+  else
+    PROJECT_STRUCTURE="$PROJECT_STRUCTURE
+[Missing directory: $dir]"
+  fi
+done
+
 # Create a temporary file with project analysis
 PROJECT_ANALYSIS=$(cat <<EOF
 Analyze the following n8n Job Search Automation project and generate a comprehensive README.md.
 
 Project Structure:
-$(find src config examples -type f 2>/dev/null || echo "No files yet")
+$PROJECT_STRUCTURE
 
 Key Files:
 - docker-compose.yml: Local development environment
