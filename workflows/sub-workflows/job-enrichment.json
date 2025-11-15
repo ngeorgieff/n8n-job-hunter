@@ -1,0 +1,214 @@
+{
+  "name": "Job Processor - Enrichment & Analysis",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Enrich job data with additional analysis\nconst jobs = $input.all().map(item => item.json);\nconst enriched = [];\n\nfor (const job of jobs) {\n  // Extract skills from title and description\n  const text = `${job.title} ${job.description}`.toLowerCase();\n  \n  const skillPatterns = {\n    languages: ['javascript', 'python', 'java', 'c\\\\+\\\\+', 'c#', 'ruby', 'go', 'rust', 'php', 'typescript', 'swift', 'kotlin'],\n    frameworks: ['react', 'angular', 'vue', 'node.js', 'express', 'django', 'flask', 'spring', 'laravel', 'rails'],\n    databases: ['postgresql', 'mysql', 'mongodb', 'redis', 'elasticsearch', 'cassandra', 'dynamodb'],\n    cloud: ['aws', 'azure', 'gcp', 'google cloud', 'docker', 'kubernetes', 'terraform'],\n    tools: ['git', 'jenkins', 'ci/cd', 'jira', 'agile', 'scrum']\n  };\n  \n  const detectedSkills = {};\n  \n  for (const [category, skills] of Object.entries(skillPatterns)) {\n    detectedSkills[category] = skills.filter(skill => {\n      const regex = new RegExp(`\\\\b${skill}\\\\b`, 'i');\n      return regex.test(text);\n    });\n  }\n  \n  // Analyze job type and remote friendliness\n  const remoteKeywords = ['remote', 'work from home', 'wfh', 'distributed', 'anywhere'];\n  const isRemoteFriendly = remoteKeywords.some(kw => text.includes(kw));\n  \n  // Estimate experience level from title\n  let estimatedLevel = 'mid';\n  if (/\\b(senior|lead|principal|staff)\\b/i.test(job.title)) {\n    estimatedLevel = 'senior';\n  } else if (/\\b(junior|entry|graduate)\\b/i.test(job.title)) {\n    estimatedLevel = 'junior';\n  }\n  \n  // Calculate a simple relevance score (0-100)\n  const skillCount = Object.values(detectedSkills).flat().length;\n  const relevanceScore = Math.min(100, skillCount * 5 + (job.salary ? 20 : 0) + (isRemoteFriendly ? 10 : 0));\n  \n  // Add enrichment data\n  enriched.push({\n    ...job,\n    enrichment: {\n      detectedSkills,\n      skillCount,\n      isRemoteFriendly,\n      estimatedLevel: job.experienceLevel || estimatedLevel,\n      relevanceScore,\n      processedAt: new Date().toISOString()\n    }\n  });\n}\n\nreturn enriched.map(job => ({ json: job }));"
+      },
+      "id": "enrich-logic",
+      "name": "Enrichment Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "={{ $json.enrichment.relevanceScore >= 50 ? 'highRelevance' : 'lowRelevance' }}"
+      },
+      "id": "filter-relevance",
+      "name": "Filter by Relevance",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "priority",
+              "name": "priority",
+              "value": "high",
+              "type": "string"
+            },
+            {
+              "id": "flag",
+              "name": "flagForReview",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "mark-high-priority",
+      "name": "Mark as High Priority",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "priority",
+              "name": "priority",
+              "value": "normal",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "mark-normal-priority",
+      "name": "Mark as Normal Priority",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "mergeByPosition"
+      },
+      "id": "merge-back",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Job Enrichment Processor\n\n### Intelligence Features\n- **Skill Detection**: Extracts technologies from job text\n- **Remote Analysis**: Identifies remote-friendly positions\n- **Level Estimation**: Determines experience level\n- **Relevance Scoring**: Rates job match quality (0-100)\n- **Priority Flagging**: Marks high-value opportunities\n\n### Skill Categories\n- Programming Languages\n- Frameworks & Libraries\n- Databases\n- Cloud & DevOps\n- Tools & Methodologies\n\n### Scoring Logic\n+5 points per detected skill\n+20 for salary info\n+10 for remote-friendly",
+        "height": 542.1288515406162,
+        "width": 369.91525423728817,
+        "color": 5
+      },
+      "id": "sticky-note",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        480
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Enrichment Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrichment Logic": {
+      "main": [
+        [
+          {
+            "node": "Filter by Relevance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter by Relevance": {
+      "highRelevance": [
+        [
+          {
+            "node": "Mark as High Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "lowRelevance": [
+        [
+          {
+            "node": "Mark as Normal Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as High Priority": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Normal Priority": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "processor",
+      "name": "processor"
+    },
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "enrichment",
+      "name": "enrichment"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}

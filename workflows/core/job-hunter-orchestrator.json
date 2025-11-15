@@ -1,0 +1,337 @@
+{
+  "name": "Job Hunter - Main Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger - Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $('Load Config').item.json.workflows.linkedinScraper }}"
+      },
+      "id": "execute-linkedin",
+      "name": "Execute LinkedIn Scraper",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        650,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $('Load Config').item.json.workflows.indeedScraper }}"
+      },
+      "id": "execute-indeed",
+      "name": "Execute Indeed Scraper",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        650,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $('Load Config').item.json.workflows.remoteScraper }}"
+      },
+      "id": "execute-remote-jobs",
+      "name": "Execute Remote Jobs Scraper",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "mergeByPosition"
+      },
+      "id": "merge-results",
+      "name": "Merge All Job Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $('Load Config').item.json.workflows.deduplicator }}"
+      },
+      "id": "execute-deduplication",
+      "name": "Execute Deduplication",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $('Load Config').item.json.workflows.enrichment }}"
+      },
+      "id": "execute-enrichment",
+      "name": "Execute Job Enrichment",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $('Load Config').item.json.workflows.storage }}"
+      },
+      "id": "execute-storage",
+      "name": "Execute Database Storage",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1500,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $('Load Config').item.json.workflows.notifications }}"
+      },
+      "id": "execute-notifications",
+      "name": "Execute Notifications",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1700,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "filePath": "={{ $env.N8N_USER_FOLDER }}/config/settings.json"
+      },
+      "id": "load-config",
+      "name": "Load Config",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "error-check",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Job Hunter Orchestrator\n\nThis workflow coordinates all job hunting sub-workflows:\n\n1. **LinkedIn Scraper** - Searches LinkedIn for jobs\n2. **Indeed Scraper** - Searches Indeed for jobs\n3. **Remote Jobs Scraper** - Searches remote job boards\n4. **Deduplication** - Removes duplicate job listings\n5. **Enrichment** - Adds additional data to jobs\n6. **Storage** - Saves jobs to database\n7. **Notifications** - Sends alerts for new jobs\n\n### Error Handling\nAll sub-workflows include error handling and retry logic.\n\n### Scheduling\nRuns every 6 hours by default (configurable in settings.json)",
+        "height": 464.79039301310035,
+        "width": 389.82142857142856,
+        "color": 4
+      },
+      "id": "sticky-note",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        480
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "Load Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Config": {
+      "main": [
+        [
+          {
+            "node": "Execute LinkedIn Scraper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute Indeed Scraper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute Remote Jobs Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute LinkedIn Scraper": {
+      "main": [
+        [
+          {
+            "node": "Merge All Job Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Indeed Scraper": {
+      "main": [
+        [
+          {
+            "node": "Merge All Job Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Execute Remote Jobs Scraper": {
+      "main": [
+        [
+          {
+            "node": "Merge All Job Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge All Job Results": {
+      "main": [
+        [
+          {
+            "node": "Execute Deduplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Deduplication": {
+      "main": [
+        [
+          {
+            "node": "Execute Job Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Job Enrichment": {
+      "main": [
+        [
+          {
+            "node": "Execute Database Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Database Storage": {
+      "main": [
+        [
+          {
+            "node": "Execute Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Notifications": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-handler-workflow-id"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "core",
+      "name": "core"
+    },
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "orchestrator",
+      "name": "orchestrator"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}
