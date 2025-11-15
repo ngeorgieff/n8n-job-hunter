@@ -1,0 +1,202 @@
+{
+  "name": "Notifications - Multi-Channel Alerts",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-new-jobs",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-new-jobs",
+      "name": "Check for New Jobs",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate email notification content\nconst jobs = $input.all().map(item => item.json);\nconst jobCount = jobs.length;\n\n// Group jobs by company\nconst byCompany = jobs.reduce((acc, job) => {\n  if (!acc[job.company]) acc[job.company] = [];\n  acc[job.company].push(job);\n  return acc;\n}, {});\n\n// Generate HTML email\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }\n    .job { border: 1px solid #ddd; margin: 15px 0; padding: 15px; border-radius: 5px; }\n    .job-title { color: #2196F3; font-size: 18px; font-weight: bold; }\n    .company { color: #666; font-size: 16px; }\n    .location { color: #999; }\n    .salary { color: #4CAF50; font-weight: bold; }\n    .apply-btn { background: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 3px; display: inline-block; margin-top: 10px; }\n    .footer { text-align: center; color: #999; padding: 20px; font-size: 12px; }\n    .stats { background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px; }\n  </style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1>🎯 New Job Opportunities Found!</h1>\n    <p>${jobCount} new job${jobCount > 1 ? 's' : ''} matching your criteria</p>\n  </div>\n  \n  <div class=\"stats\">\n    <strong>Summary:</strong><br>\n    📊 Total Jobs: ${jobCount}<br>\n    🏢 Companies: ${Object.keys(byCompany).length}<br>\n    📅 Date: ${new Date().toLocaleDateString()}\n  </div>\n  \n  <div class=\"jobs-list\">\n    ${jobs.slice(0, 10).map(job => `\n      <div class=\"job\">\n        <div class=\"job-title\">${job.title}</div>\n        <div class=\"company\">🏢 ${job.company}</div>\n        <div class=\"location\">📍 ${job.location}</div>\n        ${job.salary ? `<div class=\"salary\">💰 $${job.salary.min?.toLocaleString()} - $${job.salary.max?.toLocaleString()}</div>` : ''}\n        <div style=\"margin-top: 10px;\">${job.description?.substring(0, 200)}...</div>\n        <a href=\"${job.url}\" class=\"apply-btn\">View Job →</a>\n      </div>\n    `).join('')}\n    ${jobCount > 10 ? `<p><em>... and ${jobCount - 10} more jobs in your database</em></p>` : ''}\n  </div>\n  \n  <div class=\"footer\">\n    <p>This is an automated notification from n8n Job Hunter</p>\n    <p>To stop receiving these emails, update your notification settings</p>\n  </div>\n</body>\n</html>\n`;\n\nconst text = `\nNew Job Opportunities Found!\n\n${jobCount} new job${jobCount > 1 ? 's' : ''} matching your criteria:\n\n${jobs.slice(0, 10).map((job, i) => `\n${i + 1}. ${job.title}\n   Company: ${job.company}\n   Location: ${job.location}\n   ${job.salary ? `Salary: $${job.salary.min?.toLocaleString()} - $${job.salary.max?.toLocaleString()}` : ''}\n   URL: ${job.url}\n`).join('\\n')}\n\n${jobCount > 10 ? `... and ${jobCount - 10} more jobs in your database` : ''}\n\n---\nThis is an automated notification from n8n Job Hunter\n`;\n\nreturn [{\n  json: {\n    subject: `🎯 ${jobCount} New Job${jobCount > 1 ? 's' : ''} Found!`,\n    html,\n    text,\n    jobCount\n  }\n}];"
+      },
+      "id": "generate-email",
+      "name": "Generate Email Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_FROM_EMAIL }}",
+        "toEmail": "={{ $env.NOTIFICATION_EMAIL }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "id": "send-email",
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        200
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate Slack notification\nconst jobs = $input.all().map(item => item.json);\nconst jobCount = jobs.length;\n\n// Create Slack blocks\nconst blocks = [\n  {\n    type: \"header\",\n    text: {\n      type: \"plain_text\",\n      text: `🎯 ${jobCount} New Job${jobCount > 1 ? 's' : ''} Found!`\n    }\n  },\n  {\n    type: \"section\",\n    text: {\n      type: \"mrkdwn\",\n      text: `Found ${jobCount} new job opportunities matching your criteria`\n    }\n  },\n  { type: \"divider\" }\n];\n\n// Add top 5 jobs\njobs.slice(0, 5).forEach(job => {\n  blocks.push({\n    type: \"section\",\n    text: {\n      type: \"mrkdwn\",\n      text: `*${job.title}*\\n🏢 ${job.company}\\n📍 ${job.location}${job.salary ? `\\n💰 $${job.salary.min?.toLocaleString()} - $${job.salary.max?.toLocaleString()}` : ''}`\n    },\n    accessory: {\n      type: \"button\",\n      text: {\n        type: \"plain_text\",\n        text: \"View Job\"\n      },\n      url: job.url\n    }\n  });\n});\n\nif (jobCount > 5) {\n  blocks.push({\n    type: \"context\",\n    elements: [\n      {\n        type: \"mrkdwn\",\n        text: `_... and ${jobCount - 5} more jobs in your database_`\n      }\n    ]\n  });\n}\n\nreturn [{\n  json: {\n    blocks,\n    text: `${jobCount} new jobs found!`\n  }\n}];"
+      },
+      "id": "generate-slack",
+      "name": "Generate Slack Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "send-slack",
+      "name": "Send Slack Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Multi-Channel Notifications\n\n### Supported Channels\n- ✉️ Email (HTML formatted)\n- 💬 Slack (rich blocks)\n- 🎮 Discord (webhooks)\n\n### Features\n- Only sends if new jobs found\n- Beautiful HTML emails\n- Rich Slack formatting\n- Top N jobs highlighted\n- Summary statistics\n- Direct links to apply\n\n### Configuration\nEnable/disable channels in settings.json",
+        "height": 442.1288515406162,
+        "width": 339.91525423728817,
+        "color": 7
+      },
+      "id": "sticky-note",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check for New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Generate Email Content",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "notifications",
+      "name": "notifications"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}

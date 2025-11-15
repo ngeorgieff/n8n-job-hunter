@@ -1,0 +1,109 @@
+{
+  "version": "1.0.0",
+  "description": "Configuration settings for n8n Job Hunter",
+  "jobSearch": {
+    "keywords": [
+      "software engineer",
+      "developer",
+      "full stack",
+      "backend",
+      "frontend"
+    ],
+    "locations": [
+      "remote",
+      "San Francisco",
+      "New York",
+      "Austin"
+    ],
+    "experienceLevels": [
+      "mid-level",
+      "senior"
+    ],
+    "salaryRange": {
+      "min": 80000,
+      "max": 180000,
+      "currency": "USD"
+    },
+    "jobTypes": [
+      "full-time",
+      "contract"
+    ],
+    "excludeKeywords": [
+      "unpaid",
+      "commission only",
+      "internship"
+    ]
+  },
+  "platforms": {
+    "linkedin": {
+      "enabled": true,
+      "rateLimit": {
+        "requestsPerMinute": 10,
+        "maxRetries": 3
+      }
+    },
+    "indeed": {
+      "enabled": true,
+      "rateLimit": {
+        "requestsPerMinute": 20,
+        "maxRetries": 3
+      }
+    },
+    "glassdoor": {
+      "enabled": true,
+      "rateLimit": {
+        "requestsPerMinute": 15,
+        "maxRetries": 3
+      }
+    },
+    "remoteOk": {
+      "enabled": true,
+      "rateLimit": {
+        "requestsPerMinute": 30,
+        "maxRetries": 3
+      }
+    },
+    "weworkremotely": {
+      "enabled": true,
+      "rateLimit": {
+        "requestsPerMinute": 30,
+        "maxRetries": 3
+      }
+    }
+  },
+  "notifications": {
+    "email": {
+      "enabled": true,
+      "frequency": "daily",
+      "recipientEmail": "your-email@example.com"
+    },
+    "slack": {
+      "enabled": false,
+      "webhookUrl": "",
+      "channel": "#job-alerts"
+    },
+    "discord": {
+      "enabled": false,
+      "webhookUrl": ""
+    }
+  },
+  "database": {
+    "cleanupOldJobs": true,
+    "retentionDays": 90,
+    "deduplication": true
+  },
+  "schedule": {
+    "scraping": {
+      "cron": "0 */6 * * *",
+      "description": "Run every 6 hours"
+    },
+    "reporting": {
+      "cron": "0 9 * * MON",
+      "description": "Monday at 9 AM"
+    },
+    "cleanup": {
+      "cron": "0 2 * * SUN",
+      "description": "Sunday at 2 AM"
+    }
+  }
+}
