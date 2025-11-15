@@ -1,0 +1,309 @@
+{
+  "name": "Job Scraper - LinkedIn",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.linkedin.com/jobs/api/seeMoreJobPostings/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "keywords",
+              "value": "={{ $json.keywords }}"
+            },
+            {
+              "name": "location",
+              "value": "={{ $json.location }}"
+            },
+            {
+              "name": "start",
+              "value": "={{ $json.offset || 0 }}"
+            },
+            {
+              "name": "f_E",
+              "value": "={{ $json.experienceLevel }}"
+            },
+            {
+              "name": "f_WT",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 5
+            }
+          }
+        }
+      },
+      "id": "http-request-linkedin",
+      "name": "HTTP Request - LinkedIn API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse and transform LinkedIn job data\nconst jobs = [];\n\nfor (const item of $input.all()) {\n  const jobData = item.json;\n  \n  // Extract job listings from LinkedIn response\n  const listings = jobData.elements || [];\n  \n  for (const job of listings) {\n    jobs.push({\n      id: job.entityUrn?.split(':').pop() || '',\n      title: job.title || '',\n      company: job.companyDetails?.name || job.companyName || '',\n      location: job.formattedLocation || '',\n      description: job.description?.text || '',\n      salary: job.salary || null,\n      url: `https://www.linkedin.com/jobs/view/${job.entityUrn?.split(':').pop() || ''}`,\n      postedDate: new Date(job.listedAt || Date.now()).toISOString(),\n      jobType: job.workRemoteAllowed ? 'remote' : 'on-site',\n      experienceLevel: job.formattedExperienceLevel || '',\n      source: 'linkedin',\n      scrapedAt: new Date().toISOString(),\n      metadata: {\n        applicationsCount: job.applies || 0,\n        viewsCount: job.views || 0,\n        sponsored: job.sponsored || false\n      }\n    });\n  }\n}\n\nreturn jobs.map(job => ({ json: job }));"
+      },
+      "id": "transform-data",
+      "name": "Transform Job Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-keywords",
+              "leftValue": "={{ $json.title.toLowerCase() }}",
+              "rightValue": "={{ $('Execute Workflow Trigger').item.json.excludeKeywords.join('|') }}",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "filter-salary",
+              "leftValue": "={{ $json.salary?.min || 0 }}",
+              "rightValue": "={{ $('Execute Workflow Trigger').item.json.minSalary || 0 }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-jobs",
+      "name": "Filter Jobs by Criteria",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1000
+      },
+      "id": "rate-limit",
+      "name": "Rate Limit Protection",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## LinkedIn Job Scraper\n\n### Features\n- Searches LinkedIn Jobs API\n- Transforms data to standard format\n- Filters by criteria from config\n- Rate limiting protection\n- Error handling with retries\n\n### Input Parameters\n- keywords: Search terms\n- location: Job location\n- experienceLevel: Experience required\n- excludeKeywords: Terms to exclude\n- minSalary: Minimum salary\n\n### Output\nStandardized job objects with:\n- id, title, company\n- location, description\n- salary, url, postedDate\n- source, metadata",
+        "height": 442.1288515406162,
+        "width": 339.91525423728817,
+        "color": 5
+      },
+      "id": "sticky-note-info",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.code }}",
+                    "rightValue": "429",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rateLimit"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.code }}",
+                    "rightValue": "401",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "authError"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "error-router",
+      "name": "Error Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        660,
+        500
+      ],
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - LinkedIn API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - LinkedIn API": {
+      "main": [
+        [
+          {
+            "node": "Transform Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Job Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Jobs by Criteria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - LinkedIn API": {
+      "error": [
+        [
+          {
+            "node": "Error Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Router": {
+      "rateLimit": [
+        [
+          {
+            "node": "Rate Limit Protection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Protection": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - LinkedIn API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "scraper",
+      "name": "scraper"
+    },
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "linkedin",
+      "name": "linkedin"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}

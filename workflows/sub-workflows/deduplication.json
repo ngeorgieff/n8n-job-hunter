@@ -1,0 +1,134 @@
+{
+  "name": "Job Processor - Deduplication",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Deduplicate jobs based on multiple criteria\nconst jobs = $input.all().map(item => item.json);\nconst seen = new Map();\nconst deduplicated = [];\n\nfor (const job of jobs) {\n  // Create a unique key based on multiple fields\n  const normalizedTitle = job.title?.toLowerCase().trim() || '';\n  const normalizedCompany = job.company?.toLowerCase().trim() || '';\n  const normalizedLocation = job.location?.toLowerCase().trim() || '';\n  \n  // Use multiple strategies for deduplication\n  const keys = [\n    // Strategy 1: Exact ID match\n    `id:${job.source}:${job.id}`,\n    // Strategy 2: URL match\n    `url:${job.url}`,\n    // Strategy 3: Title + Company + Location (fuzzy)\n    `fuzzy:${normalizedTitle}:${normalizedCompany}:${normalizedLocation}`\n  ];\n  \n  let isDuplicate = false;\n  \n  for (const key of keys) {\n    if (seen.has(key)) {\n      isDuplicate = true;\n      \n      // Keep the newer posting or one with more data\n      const existing = seen.get(key);\n      const existingDate = new Date(existing.postedDate || 0);\n      const currentDate = new Date(job.postedDate || 0);\n      \n      if (currentDate > existingDate || \n          (JSON.stringify(job).length > JSON.stringify(existing).length)) {\n        // Replace with newer/richer data\n        const index = deduplicated.findIndex(j => j === existing);\n        if (index !== -1) {\n          deduplicated[index] = job;\n          keys.forEach(k => seen.set(k, job));\n        }\n      }\n      break;\n    }\n  }\n  \n  if (!isDuplicate) {\n    deduplicated.push(job);\n    keys.forEach(key => seen.set(key, job));\n  }\n}\n\n// Add deduplication metadata\nconst output = deduplicated.map(job => ({\n  ...job,\n  deduplication: {\n    originalCount: jobs.length,\n    dedupedCount: deduplicated.length,\n    removedCount: jobs.length - deduplicated.length,\n    processedAt: new Date().toISOString()\n  }\n}));\n\nreturn output.map(job => ({ json: job }));"
+      },
+      "id": "dedup-logic",
+      "name": "Deduplication Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "stats-original",
+              "name": "stats.originalCount",
+              "value": "={{ $json.deduplication.originalCount }}",
+              "type": "number"
+            },
+            {
+              "id": "stats-deduped",
+              "name": "stats.dedupedCount",
+              "value": "={{ $json.deduplication.dedupedCount }}",
+              "type": "number"
+            },
+            {
+              "id": "stats-removed",
+              "name": "stats.removedCount",
+              "value": "={{ $json.deduplication.removedCount }}",
+              "type": "number"
+            },
+            {
+              "id": "stats-rate",
+              "name": "stats.deduplicationRate",
+              "value": "={{ ($json.deduplication.removedCount / $json.deduplication.originalCount * 100).toFixed(2) }}%",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "add-stats",
+      "name": "Add Statistics",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Job Deduplication Processor\n\n### Purpose\nRemoves duplicate job listings using multiple strategies:\n\n1. **Exact ID Match**: Same job ID from same source\n2. **URL Match**: Identical job posting URL\n3. **Fuzzy Match**: Similar title + company + location\n\n### Intelligence\n- Keeps newest posting when duplicates found\n- Preserves entries with richer data\n- Adds deduplication statistics\n\n### Output\n- Deduplicated job listings\n- Statistics: original count, removed count, dedup rate",
+        "height": 445.6779661016949,
+        "width": 361.9830508474576,
+        "color": 5
+      },
+      "id": "sticky-note",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        480
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Deduplication Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplication Logic": {
+      "main": [
+        [
+          {
+            "node": "Add Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "processor",
+      "name": "processor"
+    },
+    {
+      "createdAt": "2025-01-15T00:00:00.000Z",
+      "updatedAt": "2025-01-15T00:00:00.000Z",
+      "id": "deduplication",
+      "name": "deduplication"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}
