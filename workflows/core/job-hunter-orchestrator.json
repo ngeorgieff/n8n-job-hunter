@@ -23,12 +23,91 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $('Load Config').item.json.workflows.linkedinScraper }}"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "keywords",
+              "name": "searchCriteria.keywords",
+              "value": "=software engineer, developer, full stack, backend, frontend",
+              "type": "string"
+            },
+            {
+              "id": "locations",
+              "name": "searchCriteria.locations",
+              "value": "=remote, San Francisco, New York, Austin",
+              "type": "string"
+            },
+            {
+              "id": "experienceLevels",
+              "name": "searchCriteria.experienceLevels",
+              "value": "=mid-level, senior",
+              "type": "string"
+            },
+            {
+              "id": "minSalary",
+              "name": "searchCriteria.minSalary",
+              "value": 80000,
+              "type": "number"
+            },
+            {
+              "id": "maxSalary",
+              "name": "searchCriteria.maxSalary",
+              "value": 180000,
+              "type": "number"
+            },
+            {
+              "id": "jobTypes",
+              "name": "searchCriteria.jobTypes",
+              "value": "=full-time, contract",
+              "type": "string"
+            },
+            {
+              "id": "excludeKeywords",
+              "name": "searchCriteria.excludeKeywords",
+              "value": "=unpaid, commission only, internship",
+              "type": "string"
+            },
+            {
+              "id": "enableLinkedIn",
+              "name": "platforms.linkedinEnabled",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "enableIndeed",
+              "name": "platforms.indeedEnabled",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "enableRemote",
+              "name": "platforms.remoteEnabled",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
       },
-      "id": "execute-linkedin",
-      "name": "Execute LinkedIn Scraper",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.1,
+      "id": "set-configuration",
+      "name": "Set Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        450,
+        300
+      ],
+      "notes": "Configure your job search criteria here:\n- Keywords: Job titles/skills to search for\n- Locations: Preferred locations or 'remote'\n- Experience Levels: junior, mid-level, senior\n- Salary Range: Min and max salary\n- Job Types: full-time, part-time, contract\n- Exclude Keywords: Terms to filter out\n- Platforms: Enable/disable specific job boards"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "={{ $json.platforms.linkedinEnabled ? 'enabled' : 'disabled' }}"
+      },
+      "id": "check-linkedin-enabled",
+      "name": "LinkedIn Enabled?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
       "position": [
         650,
         200
@@ -36,12 +115,13 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $('Load Config').item.json.workflows.indeedScraper }}"
+        "mode": "chooseBranch",
+        "output": "={{ $json.platforms.indeedEnabled ? 'enabled' : 'disabled' }}"
       },
-      "id": "execute-indeed",
-      "name": "Execute Indeed Scraper",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.1,
+      "id": "check-indeed-enabled",
+      "name": "Indeed Enabled?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
       "position": [
         650,
         350
@@ -49,16 +129,68 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $('Load Config').item.json.workflows.remoteScraper }}"
+        "mode": "chooseBranch",
+        "output": "={{ $json.platforms.remoteEnabled ? 'enabled' : 'disabled' }}"
+      },
+      "id": "check-remote-enabled",
+      "name": "Remote Jobs Enabled?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.name.includes('LinkedIn') ? $workflow.id : 'Job Scraper - LinkedIn' }}",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "execute-linkedin",
+      "name": "Execute LinkedIn Scraper",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        850,
+        150
+      ],
+      "notes": "Scrapes job listings from LinkedIn based on your search criteria"
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.name.includes('Indeed') ? $workflow.id : 'Job Scraper - Indeed' }}",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "execute-indeed",
+      "name": "Execute Indeed Scraper",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        850,
+        350
+      ],
+      "notes": "Scrapes job listings from Indeed based on your search criteria"
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.name.includes('Remote') ? $workflow.id : 'Job Scraper - Remote Boards' }}",
+        "options": {
+          "waitForSubWorkflow": true
+        }
       },
       "id": "execute-remote-jobs",
       "name": "Execute Remote Jobs Scraper",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
       "position": [
-        650,
+        850,
         500
-      ]
+      ],
+      "notes": "Scrapes remote job listings from Remote.co, WWR, etc."
     },
     {
       "parameters": {
@@ -69,29 +201,19 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        900,
-        350
-      ]
-    },
-    {
-      "parameters": {
-        "workflowId": "={{ $('Load Config').item.json.workflows.deduplicator }}"
-      },
-      "id": "execute-deduplication",
-      "name": "Execute Deduplication",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.1,
-      "position": [
         1100,
         350
       ]
     },
     {
       "parameters": {
-        "workflowId": "={{ $('Load Config').item.json.workflows.enrichment }}"
+        "workflowId": "Job Processor - Deduplication",
+        "options": {
+          "waitForSubWorkflow": true
+        }
       },
-      "id": "execute-enrichment",
-      "name": "Execute Job Enrichment",
+      "id": "execute-deduplication",
+      "name": "Execute Deduplication",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
       "position": [
@@ -101,10 +223,13 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $('Load Config').item.json.workflows.storage }}"
+        "workflowId": "Job Processor - Enrichment & Analysis",
+        "options": {
+          "waitForSubWorkflow": true
+        }
       },
-      "id": "execute-storage",
-      "name": "Execute Database Storage",
+      "id": "execute-enrichment",
+      "name": "Execute Job Enrichment",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
       "position": [
@@ -114,10 +239,13 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $('Load Config').item.json.workflows.notifications }}"
+        "workflowId": "Job Storage - Database Operations",
+        "options": {
+          "waitForSubWorkflow": true
+        }
       },
-      "id": "execute-notifications",
-      "name": "Execute Notifications",
+      "id": "execute-storage",
+      "name": "Execute Database Storage",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
       "position": [
@@ -127,44 +255,15 @@
     },
     {
       "parameters": {
-        "filePath": "={{ $env.N8N_USER_FOLDER }}/config/settings.json"
+        "workflowId": "Notifications - Multi-Channel Alerts",
+        "options": {
+          "waitForSubWorkflow": true
+        }
       },
-      "id": "load-config",
-      "name": "Load Config",
-      "type": "n8n-nodes-base.readBinaryFile",
-      "typeVersion": 1,
-      "position": [
-        450,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "error-check",
-              "leftValue": "={{ $json.error }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "error-handler",
-      "name": "Error Handler",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "id": "execute-notifications",
+      "name": "Execute Notifications",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
       "position": [
         1900,
         350
@@ -172,9 +271,9 @@
     },
     {
       "parameters": {
-        "content": "## Job Hunter Orchestrator\n\nThis workflow coordinates all job hunting sub-workflows:\n\n1. **LinkedIn Scraper** - Searches LinkedIn for jobs\n2. **Indeed Scraper** - Searches Indeed for jobs\n3. **Remote Jobs Scraper** - Searches remote job boards\n4. **Deduplication** - Removes duplicate job listings\n5. **Enrichment** - Adds additional data to jobs\n6. **Storage** - Saves jobs to database\n7. **Notifications** - Sends alerts for new jobs\n\n### Error Handling\nAll sub-workflows include error handling and retry logic.\n\n### Scheduling\nRuns every 6 hours by default (configurable in settings.json)",
-        "height": 464.79039301310035,
-        "width": 389.82142857142856,
+        "content": "## Job Hunter Orchestrator\n\n### Configuration\n**All settings in 'Set Configuration' node** - Click to edit:\n- Search keywords\n- Locations\n- Salary range\n- Job types\n- Enable/disable platforms\n\n### Workflow Steps:\n1. **Set Configuration** - Edit search criteria here\n2. **LinkedIn/Indeed/Remote** - Parallel job scraping\n3. **Merge Results** - Combine all sources\n4. **Deduplication** - Remove duplicates\n5. **Enrichment** - Add AI analysis\n6. **Storage** - Save to database\n7. **Notifications** - Send alerts\n\n### Quick Start:\n1. Click 'Set Configuration' and update search criteria\n2. Configure credentials (LinkedIn, DB, SMTP)\n3. Activate workflow\n4. Jobs will be scraped every 6 hours\n\n### Manual Test:\nClick 'Execute Workflow' to test immediately",
+        "height": 523.4507042253521,
+        "width": 420.5633802816901,
         "color": 4
       },
       "id": "sticky-note",
@@ -183,7 +282,7 @@
       "typeVersion": 1,
       "position": [
         180,
-        480
+        100
       ]
     }
   ],
@@ -192,26 +291,59 @@
       "main": [
         [
           {
-            "node": "Load Config",
+            "node": "Set Configuration",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Load Config": {
+    "Set Configuration": {
       "main": [
+        [
+          {
+            "node": "LinkedIn Enabled?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Indeed Enabled?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Remote Jobs Enabled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Enabled?": {
+      "enabled": [
         [
           {
             "node": "Execute LinkedIn Scraper",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Indeed Enabled?": {
+      "enabled": [
+        [
           {
             "node": "Execute Indeed Scraper",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Remote Jobs Enabled?": {
+      "enabled": [
+        [
           {
             "node": "Execute Remote Jobs Scraper",
             "type": "main",
@@ -296,25 +428,13 @@
           }
         ]
       ]
-    },
-    "Execute Notifications": {
-      "main": [
-        [
-          {
-            "node": "Error Handler",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "pinData": {},
   "settings": {
     "executionOrder": "v1",
     "saveManualExecutions": true,
-    "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "error-handler-workflow-id"
+    "callerPolicy": "workflowsFromSameOwner"
   },
   "staticData": null,
   "tags": [
@@ -333,5 +453,5 @@
   ],
   "triggerCount": 1,
   "updatedAt": "2025-01-15T00:00:00.000Z",
-  "versionId": "1"
+  "versionId": "2"
 }

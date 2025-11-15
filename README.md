@@ -63,27 +63,25 @@ cd n8n-job-hunter
 
 ### 2. Configuration
 
-1. **Edit `.env` file** with your credentials:
-   ```bash
-   cp .env.example .env
-   nano .env
-   ```
+**All configuration is done in the n8n UI - no external files needed!**
 
-2. **Configure job search criteria** in `config/settings.json`:
-   ```json
-   {
-     "jobSearch": {
-       "keywords": ["software engineer", "developer"],
-       "locations": ["remote", "San Francisco"],
-       "salaryRange": { "min": 80000, "max": 180000 }
-     }
-   }
-   ```
+1. **Set up API credentials** in n8n UI:
+   - Open n8n (http://localhost:5678)
+   - Go to Credentials → Add Credential
+   - Add: LinkedIn OAuth2 API, PostgreSQL, SMTP
 
-3. **Set up API credentials** in `config/credentials.json`:
+2. **Configure job search** in the workflow:
+   - Open "Job Hunter - Main Orchestrator" workflow
+   - Click on "Set Configuration" node
+   - Edit search criteria directly in the UI:
+     - Keywords, locations, salary range
+     - Experience levels, job types
+     - Enable/disable platforms
+   - Click Save
+
+**Optional** - For reference or environment variables:
    ```bash
-   cp config/credentials.example.json config/credentials.json
-   nano config/credentials.json
+   cp .env.example .env  # For database connection strings
    ```
 
 ### 3. Start n8n and Import Workflows
@@ -191,28 +189,26 @@ Multi-channel alerts:
 
 ## ⚙️ Configuration
 
-### Job Search Criteria (`config/settings.json`)
+### Job Search Criteria (In n8n UI)
 
-```json
-{
-  "jobSearch": {
-    "keywords": ["software engineer", "full stack"],
-    "locations": ["remote", "San Francisco"],
-    "experienceLevels": ["mid-level", "senior"],
-    "salaryRange": { "min": 80000, "max": 180000 },
-    "jobTypes": ["full-time", "contract"],
-    "excludeKeywords": ["unpaid", "internship"]
-  },
-  "platforms": {
-    "linkedin": { "enabled": true },
-    "indeed": { "enabled": true }
-  },
-  "notifications": {
-    "email": { "enabled": true },
-    "slack": { "enabled": false }
-  }
-}
-```
+**All configuration is done directly in the n8n workflow UI:**
+
+1. Open "Job Hunter - Main Orchestrator" workflow
+2. Click on "Set Configuration" node
+3. Edit these settings:
+
+- **Keywords**: `software engineer, full stack, developer`
+- **Locations**: `remote, San Francisco, New York`
+- **Experience Levels**: `mid-level, senior`
+- **Min Salary**: `80000`
+- **Max Salary**: `180000`
+- **Job Types**: `full-time, contract`
+- **Exclude Keywords**: `unpaid, internship`
+- **Platform Toggles**: Enable/disable LinkedIn, Indeed, Remote boards
+
+4. Click Save
+
+See [CONFIGURATION_GUIDE.md](docs/CONFIGURATION_GUIDE.md) for detailed instructions
 
 ### Schedule Configuration
 
@@ -410,8 +406,10 @@ n8n logs
 - Rate limiting?
 
 **Fix**:
-- Broaden keywords in `config/settings.json`
-- Verify API keys
+- Broaden keywords in "Set Configuration" node (add more job titles)
+- Lower minimum salary requirement
+- Add more locations including "remote"
+- Verify API credentials in n8n UI
 - Check rate limit delays
 
 ### Database Errors
