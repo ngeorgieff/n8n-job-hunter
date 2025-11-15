@@ -143,7 +143,7 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.name.includes('LinkedIn') ? $workflow.id : 'Job Scraper - LinkedIn' }}",
+        "workflowId": "Job Scraper - LinkedIn",
         "options": {
           "waitForSubWorkflow": true
         }
@@ -160,7 +160,7 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.name.includes('Indeed') ? $workflow.id : 'Job Scraper - Indeed' }}",
+        "workflowId": "Job Scraper - Indeed",
         "options": {
           "waitForSubWorkflow": true
         }
@@ -177,7 +177,7 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.name.includes('Remote') ? $workflow.id : 'Job Scraper - Remote Boards' }}",
+        "workflowId": "Job Scraper - Remote Boards",
         "options": {
           "waitForSubWorkflow": true
         }
@@ -194,7 +194,8 @@
     },
     {
       "parameters": {
-        "mode": "mergeByPosition"
+        "mode": "append",
+        "options": {}
       },
       "id": "merge-results",
       "name": "Merge All Job Results",
@@ -203,7 +204,8 @@
       "position": [
         1100,
         350
-      ]
+      ],
+      "notes": "Append mode handles optional inputs gracefully when platforms are disabled"
     },
     {
       "parameters": {
